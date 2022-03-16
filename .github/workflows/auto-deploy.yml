@@ -1,0 +1,26 @@
+name: Auto Deploy
+on: [push, workflow_dispatch]
+jobs:
+  Auto-Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /code/ci/notify
+            python3 notify.py --name "Jigmey's Website" --type "log" --message "Deploying website..." --hook "jigmey"
+            cd /code/jig-website
+            git pull -f
+            if [ $? -eq "0" ];
+            then
+              cd /code/ci/notify
+              python3 notify.py --name "Jigmey's Website" --type "info" --message "Deployment was successful." --hook "jigmey"
+            else
+              cd /code/ci/notify
+              python3 notify.py --name "Jigmey's Website" --type "fatal" --message "Deployment was unsuccessful." --hook "jigmey"
+            fi
